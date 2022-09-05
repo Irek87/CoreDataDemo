@@ -115,4 +115,38 @@ extension TaskListViewController {
         cell.contentConfiguration = content
         return cell
     }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
+            self.context.delete(self.taskList[indexPath.row])
+            self.taskList.remove(at: indexPath.row)
+            do {
+                try self.context.save()
+            } catch let error {
+                print(error.localizedDescription)
+            }
+            self.fetchData()
+        }
+
+        return UISwipeActionsConfiguration(actions: [delete])
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let alert = UIAlertController(title: "Edit task", message: "What do you want to do?", preferredStyle: .alert)
+        let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
+            guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
+            self.taskList[indexPath.row].name = task
+            do {
+                try self.context.save()
+            } catch let error {
+                print(error.localizedDescription)
+            }
+            self.fetchData()
+        }
+        let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
+        alert.addTextField()
+        alert.addAction(saveAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true)
+    }
 }
